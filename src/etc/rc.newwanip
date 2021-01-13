@@ -153,7 +153,14 @@ if (!is_ipaddr($cacheip) || $ip != $cacheip || !is_ipaddr($configip)) {
 
     system_routing_configure(false, $interface);
     plugins_configure('monitor');
-    filter_configure_sync(false, isset($config['system']['ip_change_kill_states']));
+    filter_configure_sync();
+
+    if (isset($config['system']['ip_change_kill_states']) && $cacheip != "") {
+        mwexec("/sbin/pfctl -k {$cacheip}/32");
+        mwexec("/sbin/pfctl -k 0.0.0.0/0 -k {$cacheip}/32");
+        mwexec("/sbin/pfctl -K {$cacheip}/32");
+        mwexec("/sbin/pfctl -K 0.0.0.0/0 -K {$cacheip}/32");
+    }
 
     if (is_ipaddr($ip)) {
         @file_put_contents($cacheip_file, $ip);
